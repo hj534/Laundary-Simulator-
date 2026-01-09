@@ -1,0 +1,147 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1796150690917945721
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 125383721919955940}
+  - component: {fileID: 6636030569525481222}
+  m_Layer: 0
+  m_Name: '===== SoundMnager ==== '
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &125383721919955940
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1796150690917945721}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 746.6776, y: 448.38605, z: -3.2097821}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6636030569525481222
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1796150690917945721}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a58d3710c3ecbde4c99a0c3352eefc57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  soundarray:
+  - name: BG
+    clip: {fileID: 8300000, guid: 985a732b3a664a44199d8f71344524de, type: 3}
+    volume: 0.4
+    pitch: 1
+    loop: 1
+    source: {fileID: 0}
+    Music: 1
+    Sound: 0
+  - name: btnclick
+    clip: {fileID: 8300000, guid: 4ab4dbf0b4cfa614bafc6743ca647a5c, type: 3}
+    volume: 0.8
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+    Music: 0
+    Sound: 1
+  - name: placeobject
+    clip: {fileID: 8300000, guid: a9d8fff60798da0438c02a0024d64581, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+    Music: 0
+    Sound: 1
+  - name: clickonitemsoncounter
+    clip: {fileID: 8300000, guid: f7489fef3523a25489d97c8d6e6f123a, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+    Music: 0
+    Sound: 1
+  - name: givingcoins
+    clip: {fileID: 8300000, guid: 59d66171c8dbb7c49b0b135c8749afad, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+    Music: 0
+    Sound: 1
+  - name: click
+    clip: {fileID: 8300000, guid: 4ab4dbf0b4cfa614bafc6743ca647a5c, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+    Music: 0
+    Sound: 1
+  - name: boxpickup
+    clip: {fileID: 8300000, guid: fe64034ebd140d14bb84ac6cc2356ea4, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+    Music: 0
+    Sound: 1
+  - name: boxintrash
+    clip: {fileID: 8300000, guid: a5293211a496071459d2ed1cf37d5c8e, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+    Music: 0
+    Sound: 1
+  - name: givechangecomplete
+    clip: {fileID: 8300000, guid: d02d97181a1324e459c5e58c019fea44, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+    Music: 0
+    Sound: 1
+  - name: warning
+    clip: {fileID: 8300000, guid: f0654cd43553a0f4aa30bb3c687ca2eb, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+    Music: 0
+    Sound: 1
+  - name: popup
+    clip: {fileID: 8300000, guid: 268782f8193dd3f41bb9ec998443d880, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+    Music: 0
+    Sound: 1
+  - name: givingcash
+    clip: {fileID: 8300000, guid: afba875cae8c0224482e868a64e0143d, type: 3}
+    volume: 1
+    pitch: 1
+    loop: 0
+    source: {fileID: 0}
+    Music: 0
+    Sound: 1
+  DefaultVolumes:
+  - 0.5
+  - 0.8
+  MusicOff: 0
