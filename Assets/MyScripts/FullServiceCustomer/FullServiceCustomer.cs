@@ -33,6 +33,19 @@ public class FullServiceCustomer : MonoBehaviour
     public bool IsRetrying { get; private set; } = false;
     public GameObject canvas;
     public Text orderId_Text;
+
+    [SerializeField] bool isAtCounter = false;
+
+    public bool CanPickOrder;
+    [SerializeField] float waitTimeToPickOrder = 15f;
+
+
+    [SerializeField] Vector3 waitpoint;
+
+    bool paymentDone = false;
+
+    [SerializeField] GameObject basket_box;
+    Coroutine pickupBasketRoutine;
     void OnEnable()
     {
         if (placedBasket)
@@ -42,16 +55,7 @@ public class FullServiceCustomer : MonoBehaviour
         StartCoroutine(WalkToAssignedSpot());
         Invoke(nameof(showorderid), 1f);
     }
-    void showorderid()
-    {
-        orderId_Text.text = $"Ticket ID: {orderID}";
-    }
-    public void MoveToCounterSpot(Vector3 targetPosition)
-    {
-        agent.SetDestination(targetPosition);
-        // animator.SetBool("isWalking", true);
-    }
-
+    
     private IEnumerator SpawnWithBasket()
     {
         yield return new WaitForSeconds(.8f);
@@ -80,6 +84,16 @@ public class FullServiceCustomer : MonoBehaviour
         if (assignedSpot != null)
             agent.SetDestination(assignedSpot.position);
         //  animator.SetBool("isWalking", true);
+    }
+
+    void showorderid()
+    {
+        orderId_Text.text = $"Ticket ID: {orderID}";
+    }
+    public void MoveToCounterSpot(Vector3 targetPosition)
+    {
+        agent.SetDestination(targetPosition);
+        // animator.SetBool("isWalking", true);
     }
 
     void Update()
@@ -177,11 +191,11 @@ public class FullServiceCustomer : MonoBehaviour
         //  yield return new WaitUntil(() => Vector3.Distance(transform.position , agent.destination) < .1f);
         //    animator.SetBool("isWalking", false);
 
-        while (true && !_orderPicked) // Keep checking until order is picked up
+        //while (true && !_orderPicked) // Keep checking until order is picked up  // new comment
         {
             // Wait random time before coming back
             float waitTime = Random.Range(50f, 110f);
-            Debug.Log($"? Customer {orderID} will return in {waitTime} seconds to check.");
+             Debug.Log($"? Customer {orderID} will return in {waitTime} seconds to check.");
             yield return new WaitForSeconds(waitTime);
             Debug.Log("While True Running !!!!  ");
             TryReturnForPickup();
@@ -190,54 +204,14 @@ public class FullServiceCustomer : MonoBehaviour
         }
     }
 
-    bool shouldKillCustomer()
-    {
-        bool matchingclothbaseket = false;
-        ClothBasket[] clothbasket = FindObjectsOfType<ClothBasket>();
-        for (int i = 0; i < clothbasket.Length; i++)
-        {
-            if (orderID == clothbasket[i].id)
-            {
-                matchingclothbaseket = true;
-                break;
-            }
-        }
-        GameObject basket = LaundryOrderManager.Instance.FindBasketByOrderID(orderID);
-
-        return basket == null && !matchingclothbaseket;
-    }
-    IEnumerator GetOrder()
-    {
-        yield return new WaitForSeconds(2);
-
-        if (shouldKillCustomer())
-        {
-            Debug.Log($"Killinmg Customer {orderID} as Basket is null");
-            gameObject.SetActive(false);
-            ResetAI();
-            yield break;
-        }
-
-        if (waiting)
-        {
-            waitpoint = FullServiceCustomerManager.Instance.GetRandomWaitPoint();
-            agent.SetDestination(waitpoint);
-        }
-        while (true && !_orderPicked) // Keep checking until order is picked up
-        {
-            // Wait random time before coming back
-            float waitTime = Random.Range(50f, 110f);
-            Debug.Log($"? Customer {orderID} will return in {waitTime} seconds to check.");
-            yield return new WaitForSeconds(waitTime);
-            Debug.Log("While True Running !!!!  ");
-            TryReturnForPickup();
-
-            // Wait until customer leaves or retries
-            yield return new WaitUntil(() => isAtCounter == false);
-        }
-    }
     private void TryReturnForPickup()
     {
+        Debug.Log("Trying to return for pickup ");
+        if (pickupBasketRoutine != null)
+        {
+            Debug.Log("Already trying to pick up basket ");
+            return; // Already trying to pick up
+        }
         assignedSpot = PickUpCounterIntreactable.instance.GetFreeSpot();
         if (assignedSpot != null)
         {
@@ -254,40 +228,19 @@ public class FullServiceCustomer : MonoBehaviour
             }
         }
         if (assignedSpot == null)
-            TryReturnForPickup();
+        {
+
+            Debug.Log("No free spot at pickup counter. Will retry later.");
+            Invoke(nameof(TryReturnForPickup), 10f); // Retry after delay // to avoid stack overflow
+            return;
+        }
+
         agent.SetDestination(assignedSpot.position);
         //    animator.SetBool("isWalking", true);
+        pickupBasketRoutine = StartCoroutine(PickupBasketRoutine());
 
-        StartCoroutine(PickupBasketRoutine());
     }
-    public void MoveToPickupSpot(Transform newSpot)
-    {
-        assignedSpot = newSpot;
-        agent.SetDestination(newSpot.position);
-        //   animator.SetBool("isWalking", true);
 
-        StartCoroutine(CheckIfFirstInLine());
-    }
-    private IEnumerator CheckIfFirstInLine()
-    {
-        yield return new WaitUntil(() => agent.remainingDistance <= agent.stoppingDistance);
-        //  animator.SetBool("isWalking", false);
-
-        // Check if this is first customer in line
-        bool isFirstInLine = PickUpCounterIntreactable.instance.standingSpots[0].currentCustomer == this;
-        if (isFirstInLine)
-        {
-            StartCoroutine(PickupBasketRoutine());
-        }
-        else
-        {
-            Debug.Log($"? Customer {orderID} waiting for their turn.");
-        }
-    }
-    [SerializeField] bool isAtCounter = false;
-
-    public bool CanPickOrder;
-    [SerializeField] float waitTimeToPickOrder = 15f;
     private IEnumerator PickupBasketRoutine() // alpha
     {
         //  isAtCounter = true;
@@ -336,9 +289,9 @@ public class FullServiceCustomer : MonoBehaviour
                 //  yield return new WaitForSeconds(.5f);
 
                 agent.isStopped = false;
-                PickUpCounterIntreactable.instance.FreeSpot(assignedSpot);
-                assignedSpot = null;
-                PickUpCounterIntreactable.instance.ShiftQueueForward();
+                // PickUpCounterIntreactable.instance.FreeSpot(assignedSpot);
+                // assignedSpot = null;
+                // PickUpCounterIntreactable.instance.ShiftQueueForward();
                 ExitLaundromat(true);
             });
 
@@ -375,11 +328,11 @@ public class FullServiceCustomer : MonoBehaviour
         // isAtCounter = false;
     }
 
-    [SerializeField] Vector3 waitpoint;
-
-    bool paymentDone = false;
     private void ExitLaundromat(bool orderPicked)
     {
+        
+        pickupBasketRoutine = null;
+        Debug.Log("Pickup Routine Ended and is nullified ");
         // animator.SetBool("isWalking", true);
         if (_orderPicked)
         {
@@ -405,26 +358,17 @@ public class FullServiceCustomer : MonoBehaviour
         }
         StartCoroutine(DisableAfterExit(_orderPicked));
     }
-    void ResetAI()
-    {
-        basketPlaced = false;
-        // _orderPicked = false;
-        isAtCounter = false;
-        Destroy(basket_box);
-        waitpoint = Vector3.zero;
-        if (box_hold_pos.childCount > 0)
-        {
-            GameObject obj = box_hold_pos.transform.GetChild(0).gameObject;
-            Destroy(obj);
-        }
-        _orderPicked = false;
-        placedBasket = false;
-        waiting = false;
-        CanPickOrder = false;
-    }
+
     private IEnumerator DisableAfterExit(bool orderPicked)
     {
-        Debug.Log("Wait Point Before wait ");
+        // Free their spot in the line
+        PickUpCounterIntreactable.instance.FreeSpot(assignedSpot);
+        assignedSpot = null;
+        yield return new WaitForSeconds(.3f);
+        // Shift queue forward
+        PickUpCounterIntreactable.instance.ShiftQueueForward();
+
+
         yield return new WaitUntil(() => agent.remainingDistance <= agent.stoppingDistance);
         if (orderPicked)
         {
@@ -455,131 +399,7 @@ public class FullServiceCustomer : MonoBehaviour
         }
 
 
-        // Free their spot in the line
-        PickUpCounterIntreactable.instance.FreeSpot(assignedSpot);
-        assignedSpot = null;
-        yield return new WaitForSeconds(.3f);
-        // Shift queue forward
-        PickUpCounterIntreactable.instance.ShiftQueueForward();
-    }
 
-    private IEnumerator WaitForTurnAtPickupCounter()
-    {
-        // Customer waits at their pickup spot
-        yield return new WaitUntil(() =>
-            PickUpCounterIntreactable.instance.standingSpots[0].currentCustomer == this);
-
-        // Move to counter when it's this customer's turn
-        agent.SetDestination(PickUpCounterIntreactable.instance.standingSpots[0].position.position);
-        //  animator.SetBool("isWalking", true);
-
-        // Wait until they reach counter
-        yield return new WaitUntil(() => agent.remainingDistance <= agent.stoppingDistance);
-        //  animator.SetBool("isWalking", false);
-
-        Debug.Log($"?? Customer {orderID} reached counter to check basket.");
-
-        StartCoroutine(CheckForBasketAtCounter());
-    }
-    [SerializeField] GameObject basket_box;
-    private IEnumerator CheckForBasketAtCounter() //beta
-    {
-        /*GameObject*/
-        basket_box = LaundryOrderManager.Instance.FindBasketByOrderID(orderID);
-        if (basket_box == null)
-            Debug.Log("Basket is nullll    ");
-        if (basket_box != null && LaundryOrderManager.Instance.IsOrderComplete(orderID))
-        {
-            yield return new WaitUntil(() => Vector3.Distance(transform.position,
-                PickUpCounterIntreactable.instance.standingSpots[0].position.position) < .5f);
-
-            /* agent.isStopped = true;
-             animator.Play("Happy");
-             yield return new WaitForSeconds(3);
-
-             // Wait until animator enters the state (important if you trigger transition)
-             yield return new WaitForSeconds(1);
-
-             // Get current animation clip length from Animator
-             AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0); // 0 = base layer
-             float animationLength = stateInfo.length;
-
-             Debug.Log("Animation Length: " + animationLength + " seconds");
-             // Wait for animation to finish
-             yield return new WaitForSeconds(animationLength);
-             // Move back to wait point
-             agent.isStopped = false;*/
-
-
-
-            // ? Basket ready
-
-            agent.isStopped = true;
-            float elapsedTime = 0f;
-            while (!CanPickOrder)
-            {
-                yield return null;
-                elapsedTime += Time.deltaTime;
-                if (elapsedTime >= waitTimeToPickOrder && !CanPickOrder)
-                {
-                    Debug.Log($"?? Customer {orderID} waited too long to pick up the order and is now leaving.");
-                    //agent.isStopped = false;
-                    agent.isStopped = false;
-                    PickUpCounterIntreactable.instance.FreeSpot(assignedSpot);
-                    assignedSpot = null;
-                    PickUpCounterIntreactable.instance.ShiftQueueForward();
-                    ExitLaundromat(false);
-                    yield break;
-                }
-            }
-            _orderPicked = true;
-            basket_box.transform.SetParent(box_hold_pos);
-            basket_box.transform.DOLocalMove(Vector3.zero, .3f).SetEase(Ease.InOutSine).OnComplete(() =>
-            {
-                Debug.Log($"? Customer {orderID} picked up basket.");
-                RackManager.Instance.FreeSpot(basket_box.transform);
-                LaundryOrderManager.Instance.RemoveOrder(orderID, basket_box.GetComponent<PackingBoxIntreactable>().counter_pos_index);
-
-                agent.isStopped = false;
-                PickUpCounterIntreactable.instance.FreeSpot(assignedSpot);
-                assignedSpot = null;
-                PickUpCounterIntreactable.instance.ShiftQueueForward();
-                ExitLaundromat(true);
-            });
-            basket_box.transform.DOLocalRotate(Vector3.zero, .3f).SetEase(Ease.InOutSine);
-
-        }
-        else
-        {
-            // ? Basket not ready
-            Debug.Log($"?? Customer {orderID} angry: order not ready.");
-            //  animator.SetTrigger("isAngry");
-            agent.isStopped = true;
-            animator.Play("Angry");
-            // Wait until animator enters the state (important if you trigger transition)
-            yield return new WaitForSeconds(1);
-
-            // Get current animation clip length from Animator
-            AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0); // 0 = base layer
-            float animationLength = stateInfo.length;
-            angryReact.Play();
-            Debug.Log("Animation Length: " + animationLength + " seconds");
-            // Wait for animation to finish
-            yield return new WaitForSeconds(animationLength);
-            // Move back to wait point
-            agent.isStopped = false;
-            StartCoroutine(ReturnToWaitPoint());
-        }
-    }
-    private IEnumerator ReturnToWaitPoint()
-    {
-        Vector3 waitPoint = FullServiceCustomerManager.Instance.GetRandomWaitPoint();
-        agent.SetDestination(waitPoint);
-        //   animator.SetBool("isWalking", true);
-        Debug.Log("Wait before Trying again  !!!");
-        yield return new WaitUntil(() => Vector3.Distance(transform.position, waitPoint) < .2f);
-
-        StartCoroutine(WaitBeforeRetrying());
     }
 
     private IEnumerator WaitBeforeRetrying()
@@ -594,9 +414,101 @@ public class FullServiceCustomer : MonoBehaviour
         yield return new WaitForSeconds(waitTime);
 
         // Try returning again
-        StartCoroutine(WaitForTurnAtPickupCounter());
+        //StartCoroutine(WaitForTurnAtPickupCounter());
+        TryReturnForPickup();
     }
 
+    bool shouldKillCustomer()
+    {
+        bool matchingclothbaseket = false;
+        ClothBasket[] clothbasket = FindObjectsOfType<ClothBasket>();
+        for (int i = 0; i < clothbasket.Length; i++)
+        {
+            if (orderID == clothbasket[i].id)
+            {
+                matchingclothbaseket = true;
+                break;
+            }
+        }
+        GameObject basket = LaundryOrderManager.Instance.FindBasketByOrderID(orderID);
+
+        return basket == null && !matchingclothbaseket;
+    }
+    IEnumerator GetOrder()
+    {
+        yield return new WaitForSeconds(2);
+
+        if (shouldKillCustomer())
+        {
+            Debug.Log($"Killinmg Customer {orderID} as Basket is null");
+            gameObject.SetActive(false);
+            ResetAI();
+            yield break;
+        }
+
+        if (waiting)
+        {
+            waitpoint = FullServiceCustomerManager.Instance.GetRandomWaitPoint();
+            agent.SetDestination(waitpoint);
+        }
+        //while (true && !_orderPicked) //         commented
+        {
+            // Wait random time before coming back
+            float waitTime = Random.Range(50f, 110f);
+            Debug.Log($"? Customer {orderID} will return in {waitTime} seconds to check.");
+            yield return new WaitForSeconds(waitTime);
+            Debug.Log("While True Running !!!!  ");
+            TryReturnForPickup();
+
+            // Wait until customer leaves or retries
+            yield return new WaitUntil(() => isAtCounter == false);
+        }
+    }
+
+    public void MoveToPickupSpot(Transform newSpot)
+    {
+        assignedSpot = newSpot;
+        agent.SetDestination(newSpot.position);
+        //   animator.SetBool("isWalking", true);
+
+        StartCoroutine(CheckIfFirstInLine());
+    }
+    private IEnumerator CheckIfFirstInLine()
+    {
+        yield return new WaitUntil(() => agent.remainingDistance <= agent.stoppingDistance);
+        //  animator.SetBool("isWalking", false);
+
+        // Check if this is first customer in line
+        bool isFirstInLine = PickUpCounterIntreactable.instance.standingSpots[0].currentCustomer == this;
+        if (isFirstInLine)
+        {
+            StartCoroutine(PickupBasketRoutine());
+        }
+        else
+        {
+            Debug.Log($"? Customer {orderID} waiting for their turn.");
+        }
+    }
+    
+    void ResetAI()
+    {
+        basketPlaced = false;
+        // _orderPicked = false;
+        isAtCounter = false;
+        Destroy(basket_box);
+        waitpoint = Vector3.zero;
+        if (box_hold_pos.childCount > 0)
+        {
+            GameObject obj = box_hold_pos.transform.GetChild(0).gameObject;
+            Destroy(obj);
+        }
+        _orderPicked = false;
+        placedBasket = false;
+        waiting = false;
+        CanPickOrder = false;
+    }
+
+   
     public void ForceLeaveLaundromat()
     {
         if (_orderPicked)
@@ -656,5 +568,132 @@ public class FullServiceCustomer : MonoBehaviour
         agent.Warp(transform.position); // Snap position
         StartCoroutine(GetOrder());
     }
+
+
+
+
+
+    //===============extra old methods==================
+    //  private IEnumerator WaitForTurnAtPickupCounter()   //iiiiiiiii
+    // {
+    //     // Customer waits at their pickup spot
+    //     yield return new WaitUntil(() =>
+    //         PickUpCounterIntreactable.instance.standingSpots[0].currentCustomer == this);
+
+    //     // Move to counter when it's this customer's turn
+    //     agent.SetDestination(PickUpCounterIntreactable.instance.standingSpots[0].position.position);
+    //     //  animator.SetBool("isWalking", true);
+
+    //     // Wait until they reach counter
+    //     yield return new WaitUntil(() => agent.remainingDistance <= agent.stoppingDistance);
+    //     //  animator.SetBool("isWalking", false);
+
+    //     Debug.Log($"?? Customer {orderID} reached counter to check basket.");
+
+    //     StartCoroutine(CheckForBasketAtCounter());
+    // }
+    
+    // private IEnumerator CheckForBasketAtCounter() //beta   iiiiii
+    // {
+    //     /*GameObject*/
+    //     basket_box = LaundryOrderManager.Instance.FindBasketByOrderID(orderID);
+    //     if (basket_box == null)
+    //         Debug.Log("Basket is nullll    ");
+    //     if (basket_box != null && LaundryOrderManager.Instance.IsOrderComplete(orderID))
+    //     {
+    //         yield return new WaitUntil(() => Vector3.Distance(transform.position,
+    //             PickUpCounterIntreactable.instance.standingSpots[0].position.position) < .5f);
+
+    //         /* agent.isStopped = true;
+    //          animator.Play("Happy");
+    //          yield return new WaitForSeconds(3);
+
+    //          // Wait until animator enters the state (important if you trigger transition)
+    //          yield return new WaitForSeconds(1);
+
+    //          // Get current animation clip length from Animator
+    //          AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0); // 0 = base layer
+    //          float animationLength = stateInfo.length;
+
+    //          Debug.Log("Animation Length: " + animationLength + " seconds");
+    //          // Wait for animation to finish
+    //          yield return new WaitForSeconds(animationLength);
+    //          // Move back to wait point
+    //          agent.isStopped = false;*/
+
+
+
+    //         // ? Basket ready
+
+    //         agent.isStopped = true;
+    //         float elapsedTime = 0f;
+    //         while (!CanPickOrder)
+    //         {
+    //             yield return null;
+    //             elapsedTime += Time.deltaTime;
+    //             if (elapsedTime >= waitTimeToPickOrder && !CanPickOrder)
+    //             {
+    //                 Debug.Log($"?? Customer {orderID} waited too long to pick up the order and is now leaving.");
+    //                 //agent.isStopped = false;
+    //                 agent.isStopped = false;
+    //                 PickUpCounterIntreactable.instance.FreeSpot(assignedSpot);
+    //                 assignedSpot = null;
+    //                 PickUpCounterIntreactable.instance.ShiftQueueForward();
+    //                 ExitLaundromat(false);
+    //                 yield break;
+    //             }
+    //         }
+    //         _orderPicked = true;
+    //         basket_box.transform.SetParent(box_hold_pos);
+    //         basket_box.transform.DOLocalMove(Vector3.zero, .3f).SetEase(Ease.InOutSine).OnComplete(() =>
+    //         {
+    //             Debug.Log($"? Customer {orderID} picked up basket.");
+    //             RackManager.Instance.FreeSpot(basket_box.transform);
+    //             LaundryOrderManager.Instance.RemoveOrder(orderID, basket_box.GetComponent<PackingBoxIntreactable>().counter_pos_index);
+
+    //             agent.isStopped = false;
+    //             PickUpCounterIntreactable.instance.FreeSpot(assignedSpot);
+    //             assignedSpot = null;
+    //             PickUpCounterIntreactable.instance.ShiftQueueForward();
+    //             ExitLaundromat(true);
+    //         });
+    //         basket_box.transform.DOLocalRotate(Vector3.zero, .3f).SetEase(Ease.InOutSine);
+
+    //     }
+    //     else
+    //     {
+    //         // ? Basket not ready
+    //         Debug.Log($"?? Customer {orderID} angry: order not ready.");
+    //         //  animator.SetTrigger("isAngry");
+    //         agent.isStopped = true;
+    //         animator.Play("Angry");
+    //         // Wait until animator enters the state (important if you trigger transition)
+    //         yield return new WaitForSeconds(1);
+
+    //         // Get current animation clip length from Animator
+    //         AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0); // 0 = base layer
+    //         float animationLength = stateInfo.length;
+    //         angryReact.Play();
+    //         Debug.Log("Animation Length: " + animationLength + " seconds");
+    //         // Wait for animation to finish
+    //         yield return new WaitForSeconds(animationLength);
+    //         // Move back to wait point
+    //         agent.isStopped = false;
+    //         StartCoroutine(ReturnToWaitPoint());
+    //     }
+    // }
+    // private IEnumerator ReturnToWaitPoint() //iiiiiiiiiii
+    // {
+    //     Vector3 waitPoint = FullServiceCustomerManager.Instance.GetRandomWaitPoint();
+    //     agent.SetDestination(waitPoint);
+    //     //   animator.SetBool("isWalking", true);
+    //     Debug.Log("Wait before Trying again  !!!");
+    //     yield return new WaitUntil(() => Vector3.Distance(transform.position, waitPoint) < .2f);
+
+    //     StartCoroutine(WaitBeforeRetrying());
+    // }
+
+
+
 
 }

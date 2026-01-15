@@ -64,6 +64,15 @@ public class LaundryOrderManager : MonoBehaviour
     // Check if order is complete
     public bool IsOrderComplete(int orderID)
     {
+        if(orderStatus.ContainsKey(orderID))
+        {
+            Debug.Log("Checking Order Complete Status   " + orderStatus[orderID]);
+        }
+        else
+        {
+            Debug.Log("Order ID Not Found in System   " + orderID);
+        }
+        
         return orderStatus.ContainsKey(orderID) && orderStatus[orderID];
     }
 
