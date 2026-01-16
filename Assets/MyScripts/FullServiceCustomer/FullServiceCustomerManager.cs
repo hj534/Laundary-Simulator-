@@ -47,7 +47,10 @@ public class FullServiceCustomerManager : MonoBehaviour
     void Start()
     {
         ScheduleNextSpawn();
-        //TimeHandler.Instance.OnTimeStoppedEvent += SendBackAllCustomers;
+         if (TimeHandler.Instance != null)
+        {
+            TimeHandler.Instance.OnDayEnded += SendBackAllCustomers;
+        }
 
         // Subscribe to Hot Time events
         /*   DayTimerManager.Instance.OnHotTimeStart += () => isHotTime = true;
@@ -55,10 +58,10 @@ public class FullServiceCustomerManager : MonoBehaviour
     }
     void OnDestroy()
     {
-        // if (TimeHandler.Instance != null)
-        // {
-        //     TimeHandler.Instance.OnTimeStoppedEvent -= SendBackAllCustomers;
-        // }
+        if (TimeHandler.Instance != null)
+        {
+            TimeHandler.Instance.OnDayEnded -= SendBackAllCustomers;
+        }
     }
 
     /* void Update()
@@ -221,12 +224,12 @@ public class FullServiceCustomerManager : MonoBehaviour
     public void SendBackAllCustomers()
     {
         FullServiceCustomer[] customers = FindObjectsOfType<FullServiceCustomer>();
-        List<FullServiceCustomerData> dataList = new List<FullServiceCustomerData>();
-
         foreach (var customer in customers)
         {
             customer.ForceLeaveLaundromat();
         }
     }
+
+
 
 }

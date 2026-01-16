@@ -36,7 +36,8 @@ public class TimeHandler : MonoBehaviour
     [SerializeField] float hotTimeEndSeconds;
     [SerializeField] bool isHotTimeActive = false;
 
-    public event Action OnTimeStoppedEvent;
+    public event Action OnDayEnded;
+    public event Action OnNewDayStarted;
 
 
     #endregion
@@ -135,7 +136,7 @@ public class TimeHandler : MonoBehaviour
                 dayEnd_obj.SetActive(true);
                 dayEnd_txt.SetActive(true);
 
-                //OnTimeStoppedEvent?.Invoke();
+                OnDayEnded?.Invoke();
                 //  GamePlayHandler.Instance.CloseShop();
             }
 
@@ -252,6 +253,8 @@ public class TimeHandler : MonoBehaviour
 
         UIManager.instance.ResetDailySummary();
         UIManager.instance.CloseDailySummaryPanel();
+
+        OnNewDayStarted?.Invoke();
     }
     string SetNextDay(int index)
     {

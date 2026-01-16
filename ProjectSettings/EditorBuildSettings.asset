@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/laundary_shop.unity
-    guid: 273b5f1a564f6574d83274668866000a
+    path: Assets/Scenes/GamePlay.unity
+    guid: 2f6c76ae3c7a30641b3cae0cf13b8166
   m_configObjects: {}

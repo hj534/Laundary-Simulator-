@@ -27,7 +27,7 @@ public class FullServiceCustomer : MonoBehaviour
     public Transform basketHoldPoint, box_hold_pos;   // Where customer holds basket
     public Transform counterDropPoint;  // Where basket is placed on counter
 
-    public bool basketPlaced = false, _orderPicked, placedBasket, waiting;
+    public bool basketPlaced = false, _orderPicked, placedBasket, waiting, shopClosed;
     public ParticleSystem angryReact;
 
     public bool IsRetrying { get; private set; } = false;
@@ -46,6 +46,8 @@ public class FullServiceCustomer : MonoBehaviour
 
     [SerializeField] GameObject basket_box;
     Coroutine pickupBasketRoutine;
+
+
     void OnEnable()
     {
         if (placedBasket)
@@ -55,7 +57,7 @@ public class FullServiceCustomer : MonoBehaviour
         StartCoroutine(WalkToAssignedSpot());
         Invoke(nameof(showorderid), 1f);
     }
-    
+
     private IEnumerator SpawnWithBasket()
     {
         yield return new WaitForSeconds(.8f);
@@ -191,13 +193,22 @@ public class FullServiceCustomer : MonoBehaviour
         //  yield return new WaitUntil(() => Vector3.Distance(transform.position , agent.destination) < .1f);
         //    animator.SetBool("isWalking", false);
 
+        while (TimeHandler.Instance.stop_timer)  // so customer only tries when time is running
+        {
+            yield return new WaitForSeconds(2f);
+        }
         //while (true && !_orderPicked) // Keep checking until order is picked up  // new comment
         {
             // Wait random time before coming back
             float waitTime = Random.Range(50f, 110f);
-             Debug.Log($"? Customer {orderID} will return in {waitTime} seconds to check.");
+            Debug.Log($"? Customer {orderID} will return in {waitTime} seconds to check.");
             yield return new WaitForSeconds(waitTime);
-            Debug.Log("While True Running !!!!  ");
+
+            while (TimeHandler.Instance.stop_timer)  // so customer only tries when time is running
+            {
+                yield return new WaitForSeconds(2f);
+            }
+
             TryReturnForPickup();
             // Wait until customer leaves or retries
             yield return new WaitUntil(() => isAtCounter == false);
@@ -206,6 +217,7 @@ public class FullServiceCustomer : MonoBehaviour
 
     private void TryReturnForPickup()
     {
+
         Debug.Log("Trying to return for pickup ");
         if (pickupBasketRoutine != null)
         {
@@ -330,7 +342,7 @@ public class FullServiceCustomer : MonoBehaviour
 
     private void ExitLaundromat(bool orderPicked)
     {
-        
+
         pickupBasketRoutine = null;
         Debug.Log("Pickup Routine Ended and is nullified ");
         // animator.SetBool("isWalking", true);
@@ -361,6 +373,16 @@ public class FullServiceCustomer : MonoBehaviour
 
     private IEnumerator DisableAfterExit(bool orderPicked)
     {
+        if (TimeHandler.Instance.stop_timer && shopClosed)
+        {
+            yield return new WaitUntil(() => Vector3.Distance(transform.position, waitpoint) < .5f);
+            // ? Order not picked: disable object
+            gameObject.SetActive(false);
+            ResetAI();
+            yield break;
+        }
+
+
         // Free their spot in the line
         PickUpCounterIntreactable.instance.FreeSpot(assignedSpot);
         assignedSpot = null;
@@ -383,13 +405,6 @@ public class FullServiceCustomer : MonoBehaviour
             // // Shift queue forward
             // PickUpCounterIntreactable.instance.ShiftQueueForward();
         }
-        // else if(TimeHandler.Instance.stop_timer)
-        // {
-        //     yield return new WaitUntil(() => Vector3.Distance(transform.position, waitpoint) < .5f);
-        //     // ? Order not picked: disable object
-        //     // gameObject.SetActive(false);
-        //     // ResetAI();
-        // }
         else
         {
             Debug.Log("Wait Point Before wait " + waitpoint);
@@ -409,9 +424,18 @@ public class FullServiceCustomer : MonoBehaviour
         //    animator.SetBool("isWalking", false);
 
         // Wait random time before retrying
+
+
+
+
         float waitTime = Random.Range(100f, 150f);
         Debug.Log($"? Customer {orderID} will retry in {waitTime} seconds.");
         yield return new WaitForSeconds(waitTime);
+
+        while (TimeHandler.Instance.stop_timer)  // so customer only tries when time is running
+        {
+            yield return new WaitForSeconds(2f);
+        }
 
         // Try returning again
         //StartCoroutine(WaitForTurnAtPickupCounter());
@@ -451,6 +475,11 @@ public class FullServiceCustomer : MonoBehaviour
             waitpoint = FullServiceCustomerManager.Instance.GetRandomWaitPoint();
             agent.SetDestination(waitpoint);
         }
+
+        while (TimeHandler.Instance.stop_timer)  // so customer only tries when time is running
+        {
+            yield return new WaitForSeconds(2f);
+        }
         //while (true && !_orderPicked) //         commented
         {
             // Wait random time before coming back
@@ -489,7 +518,7 @@ public class FullServiceCustomer : MonoBehaviour
             Debug.Log($"? Customer {orderID} waiting for their turn.");
         }
     }
-    
+
     void ResetAI()
     {
         basketPlaced = false;
@@ -506,23 +535,26 @@ public class FullServiceCustomer : MonoBehaviour
         placedBasket = false;
         waiting = false;
         CanPickOrder = false;
+        shopClosed = false;
+        paymentDone = false;
+        pickupBasketRoutine = null;
     }
 
-   
+
     public void ForceLeaveLaundromat()
     {
-        if (_orderPicked)
+        if (_orderPicked || basketPlaced || waiting) // those waiting for order wil still come back
             return; // already done, do nothing
 
         Debug.Log($"⏰ Customer {orderID} forced to leave due to timer.");
-
+        shopClosed = true;
         // Stop any pickup attempt
         StopAllCoroutines();
 
         // Free pickup spot if occupied
         if (assignedSpot != null)
         {
-            PickUpCounterIntreactable.instance.FreeSpot(assignedSpot);
+            CounterManager.Instance.FreeSpot(assignedSpot);
             assignedSpot = null;
             //PickUpCounterIntreactable.instance.ShiftQueueForward();
         }
@@ -592,7 +624,7 @@ public class FullServiceCustomer : MonoBehaviour
 
     //     StartCoroutine(CheckForBasketAtCounter());
     // }
-    
+
     // private IEnumerator CheckForBasketAtCounter() //beta   iiiiii
     // {
     //     /*GameObject*/
