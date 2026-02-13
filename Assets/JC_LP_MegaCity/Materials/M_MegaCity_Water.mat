@@ -24,17 +24,21 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: M_MegaCity_Water
-  m_Shader: {fileID: -6465566751694194690, guid: 3a85cc08b9688614a96041185487e3f3, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 7087360e92cfc81459e8fd7dd102176d, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
+  m_ValidKeywords:
+  - _BUILTIN_ALPHATEST_ON
+  - _BUILTIN_AlphaClip
+  - _BUILTIN_SURFACE_TYPE_TRANSPARENT
   m_InvalidKeywords: []
   m_LightmapFlags: 4
-  m_EnableInstancingVariants: 1
+  m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
+  m_CustomRenderQueue: 3000
   stringTagMap:
     MotionVector: User
+    RenderType: Transparent
   disabledShaderPasses:
   - TransparentDepthPrepass
   - TransparentDepthPostpass
@@ -53,11 +57,19 @@ Material:
         m_Texture: {fileID: 2800000, guid: 6399cc6bbe298fc478e7bc894295efb6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_742fed6e18314c6ba48865ebfb275510_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: 6399cc6bbe298fc478e7bc894295efb6, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _SampleTexture2D_89c873b4c9054cf6b2e424e92c817ccf_Texture_1_Texture2D:
         m_Texture: {fileID: 2800000, guid: 6399cc6bbe298fc478e7bc894295efb6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _SampleTexture2D_c26f5985bd2345f9974f09edb993ef94_Texture_1_Texture2D:
+        m_Texture: {fileID: 2800000, guid: 6399cc6bbe298fc478e7bc894295efb6, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _SampleTexture2D_ca1c0e24dd4448cc8db6e81ab940f635_Texture_1_Texture2D:
         m_Texture: {fileID: 2800000, guid: 6399cc6bbe298fc478e7bc894295efb6, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -101,11 +113,22 @@ Material:
     - _AlphaCutoffEnable: 0
     - _AlphaDstBlend: 10
     - _AlphaSrcBlend: 1
+    - _BUILTIN_AlphaClip: 1
+    - _BUILTIN_Blend: 0
+    - _BUILTIN_CullMode: 2
+    - _BUILTIN_DstBlend: 10
+    - _BUILTIN_QueueControl: 0
+    - _BUILTIN_QueueOffset: 0
+    - _BUILTIN_SrcBlend: 5
+    - _BUILTIN_Surface: 1
+    - _BUILTIN_ZTest: 4
+    - _BUILTIN_ZWrite: 0
+    - _BUILTIN_ZWriteControl: 0
     - _BlendMode: 0
     - _ConservativeDepthOffsetEnable: 0
     - _CullMode: 2
     - _CullModeForward: 2
-    - _Depth: 0.26
+    - _Depth: 1.01
     - _DepthOffsetEnable: 0
     - _DoubleSidedEnable: 0
     - _DoubleSidedGIMode: 0
@@ -114,13 +137,18 @@ Material:
     - _EnableBlendModePreserveSpecularLighting: 1
     - _EnableFogOnTransparent: 1
     - _ExcludeFromTUAndAA: 0
+    - _FlarePower: 8.9
     - _FlareScale: 6000
     - _FlareSpeed: 2
     - _Flare_Power: 8.9
+    - _FoamAmount: 0.38
     - _FoamSmoothness: 1.5
+    - _FoamSpeed: 20
     - _Foam_Amount: 0.38
     - _Foam_Scale: 859
     - _Foam_Speed: 20
+    - _NormalScale: 40
+    - _NormalSpeed: 0.1
     - _NormalStranght: 0.5
     - _NormalStrength: 0.5
     - _Normal_Scale: 40
@@ -155,6 +183,9 @@ Material:
     - _TransparentWritingMotionVec: 0
     - _TransparentZWrite: 0
     - _UseShadowThreshold: 0
+    - _WaveIntensity: 0.2
+    - _WaveScale: 100
+    - _WaveSpeed: 500
     - _Wave_Intensity: 0.2
     - _Wave_Scale: 100
     - _Wave_Speed: 500
@@ -171,9 +202,23 @@ Material:
     - _DoubleSidedConstants: {r: 1, g: 1, b: 1, a: 0}
     - _EmissionColor: {r: 1, g: 1, b: 1, a: 1}
     - _FlareColor: {r: 0.3962264, g: 0.3962264, b: 0.3962264, a: 1}
+    - _FoamColor: {r: 1, g: 1, b: 1, a: 0.92156863}
     - _Foam_Color: {r: 1, g: 1, b: 1, a: 0.7882353}
-    - _ShallowColor: {r: 0, g: 0.8360357, b: 1, a: 0.4627451}
+    - _ShallowColor: {r: 0, g: 0.8360357, b: 1, a: 0.36862746}
   m_BuildTextureStacks: []
+--- !u!114 &1377478033415620015
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 639247ca83abc874e893eb93af2b5e44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 0
 --- !u!114 &7163606312390363195
 MonoBehaviour:
   m_ObjectHideFlags: 11
