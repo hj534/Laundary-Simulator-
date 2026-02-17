@@ -184,7 +184,7 @@ Material:
     - _TransparentZWrite: 0
     - _UseShadowThreshold: 0
     - _WaveIntensity: 0.2
-    - _WaveScale: 100
+    - _WaveScale: 50
     - _WaveSpeed: 500
     - _Wave_Intensity: 0.2
     - _Wave_Scale: 100
