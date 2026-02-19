@@ -1,4 +1,4 @@
-# Laundromat Simulator – Phase 1
+# Readme
 
 ## Overview
 This project is a Unity-based laundromat simulation focusing on the core gameplay loop for Phase 1.  
@@ -29,7 +29,10 @@ Please open the project using **Unity 2022.3.62f3** (or the same 2022 LTS series
 ---
 
 ## How to Play (Phase 1)
-- Start scene: **GamePlay** (in Assets go to Scene folder and there open GamePlay Scene)
+- Start scene: **GamePlay** (in Project go to Scene folder and there open GamePlay Scene)
+- <img width="1133" height="597" alt="image" src="https://github.com/user-attachments/assets/cd7e86ab-e4d3-4b8f-8d54-9bbe45c2bcaf" />
+-Once The GamePlay Scene is Opened, Press Play Button
+
 - Player manages a laundromat during business hours
 - Two customer types:
 - **Self-Service (SS)**: Uses washer → dryer → exits
